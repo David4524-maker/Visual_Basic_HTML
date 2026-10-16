@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Visual Basic HTML — IDE</title>
+<style>
+  :root{--face:#d4d0c8;--sh:#808080;--hi:#ffffff;--dk:#404040;--title1:#000080;--title2:#1084d0;--menu:#d4d0c8;--sel:#000080;--seltext:#ffffff;--desk:#5a7a8a;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:"MS Sans Serif","Segoe UI",Tahoma,sans-serif;font-size:11px;user-select:none;}
+  body{display:grid;grid-template-rows:auto auto 1fr 240px auto;height:100vh;background:var(--face);color:#000;overflow:hidden;}
+  body.running .designer{opacity:.4;filter:grayscale(.5);}
+  .menubar{background:var(--menu);display:flex;border-bottom:1px solid var(--sh);}
+  .menu{position:relative;padding:3px 10px;cursor:default;}
+  .menu:hover,.menu.open{background:var(--sel);color:var(--seltext);}
+  .menu .dropdown{display:none;position:absolute;top:100%;inset-inline-start:0;min-width:190px;background:var(--face);border:1px solid #000;box-shadow:2px 2px 0 rgba(0,0,0,.4);padding:2px;z-index:600;}
+  .menu.open .dropdown{display:block;}
+  .menu .dropdown div{padding:4px 24px 4px 22px;cursor:default;display:flex;align-items:center;gap:8px;}
+  .menu .dropdown div:hover{background:var(--sel);color:var(--seltext);}
+  .menu .dropdown div .check{width:12px;}
+  .menu .dropdown hr{border:0;border-top:1px solid var(--sh);border-bottom:1px solid var(--hi);margin:3px 0;}
+  .spacer{flex:1;}
+  #langMenu{border-inline-start:1px solid var(--sh);}
+  .toolbar{display:flex;align-items:center;gap:2px;padding:3px 6px;background:var(--face);border-bottom:1px solid var(--sh);}
+  .tbtn{width:24px;height:22px;background:var(--face);border:1px solid transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;}
+  .tbtn:hover{border-color:var(--hi) var(--dk) var(--dk) var(--hi);background:#e4e0d8;}
+  .tbtn:active{border-color:var(--dk) var(--hi) var(--hi) var(--dk);}
+  .tsep{width:1px;height:18px;background:var(--sh);margin:0 4px;box-shadow:1px 0 var(--hi);}
+  .workspace{display:grid;grid-template-columns:64px 1fr 260px;overflow:hidden;background:var(--face);}
+  .toolbox{background:var(--face);border-inline-end:1px solid var(--sh);display:flex;flex-wrap:wrap;align-content:flex-start;padding:4px;gap:2px;overflow-y:auto;}
+  .tool{width:26px;height:26px;background:var(--face);border:1px solid transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;}
+  .tool:hover{border-color:var(--hi) var(--dk) var(--dk) var(--hi);}
+  .tool.active{border-color:var(--dk) var(--hi) var(--hi) var(--dk);background:#c8c4bc;}
+  .designer{overflow:auto;padding:24px;background:var(--desk);background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:8px 8px;}
+  .form-window{background:var(--face);border:1px solid #000;box-shadow:3px 3px 6px rgba(0,0,0,.5);display:inline-block;}
+  .form-titlebar{height:18px;background:linear-gradient(to right,var(--title1),var(--title2));color:#fff;font-weight:bold;font-size:11px;display:flex;align-items:center;padding:0 3px;gap:6px;direction:ltr;}
+  .form-titlebar .cap{flex:1;padding-inline-start:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .form-titlebar .btns{display:flex;gap:1px;}
+  .form-titlebar .btns span{width:15px;height:13px;background:var(--face);color:#000;font-size:9px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:1px solid;border-color:var(--hi) var(--dk) var(--dk) var(--hi);}
+  .form-canvas{position:relative;background:var(--face);overflow:hidden;}
+  .vb-control{position:absolute;font-size:11px;}
+  .vb-commandbutton{background:var(--face);border:2px solid;border-color:var(--hi) var(--dk) var(--dk) var(--hi);display:flex;align-items:center;justify-content:center;cursor:default;font-size:11px;padding:1px;}
+  .vb-commandbutton:active{border-color:var(--dk) var(--hi) var(--hi) var(--dk);}
+  .vb-label{display:flex;align-items:center;background:transparent;}
+  .vb-textbox{background:#fff;border:2px solid;border-color:var(--dk) var(--hi) var(--hi) var(--dk);padding:2px 3px;font-family:"MS Sans Serif",Tahoma,sans-serif;font-size:11px;width:100%;height:100%;outline:none;user-select:text;}
+  .vb-checkbox,.vb-optionbutton{display:flex;align-items:center;gap:4px;background:transparent;cursor:default;}
+  .vb-checkbox .box,.vb-optionbutton .box{width:13px;height:13px;background:#fff;border:2px solid;border-color:var(--dk) var(--hi) var(--hi) var(--dk);display:flex;align-items:center;justify-content:center;flex:0 0 13px;}
+  .vb-optionbutton .box{border-radius:50%;}
+  .vb-checkbox.checked .box::after{content:"✓";font-size:10px;font-weight:bold;line-height:1;}
+  .vb-optionbutton.checked .box::after{content:"";width:6px;height:6px;border-radius:50%;background:#000;}
+  .vb-combobox{background:#fff;border:2px solid;border-color:var(--dk) var(--hi) var(--hi) var(--dk);display:flex;align-items:center;font-size:11px;padding-inline-start:3px;}
+  .vb-combobox .arrow{width:17px;height:100%;margin-inline-start:auto;background:var(--face);border-inline-start:1px solid var(--sh);display:flex;align-items:center;justify-content:center;font-size:9px;}
+  .vb-listbox{background:#fff;border:2px solid;border-color:var(--dk) var(--hi) var(--hi) var(--dk);overflow:auto;font-size:11px;padding:1px;}
+  .vb-frame{background:transparent;border:1px solid var(--sh);position:absolute;}
+  .vb-frame .framecap{position:absolute;top:-7px;inset-inline-start:8px;background:var(--face);padding:0 4px;font-size:11px;}
+  .selection{position:absolute;border:1px dashed #000;pointer-events:none;z-index:100;}
+  .selection .handle{position:absolute;width:7px;height:7px;background:#000;border:1px solid #fff;pointer-events:auto;}
+  .h-nw{left:-4px;top:-4px;cursor:nwse-resize;} .h-n{left:calc(50% - 4px);top:-4px;cursor:ns-resize;}
+  .h-ne{right:-4px;top:-4px;cursor:nesw-resize;} .h-e{right:-4px;top:calc(50% - 4px);cursor:ew-resize;}
+  .h-se{right:-4px;bottom:-4px;cursor:nwse-resize;} .h-s{left:calc(50% - 4px);bottom:-4px;cursor:ns-resize;}
+  .h-sw{left:-4px;bottom:-4px;cursor:nesw-resize;} .h-w{left:-4px;top:calc(50% - 4px);cursor:ew-resize;}
+  .form-selection{position:absolute;inset:0;border:2px dashed #000;pointer-events:none;z-index:99;}
+  .rightpanel{display:grid;grid-template-rows:130px 1fr;background:var(--face);border-inline-start:1px solid var(--sh);overflow:hidden;}
+  .panel-title{background:var(--face);border-bottom:1px solid var(--sh);padding:2px 6px;font-weight:bold;font-size:11px;}
+  .tree{overflow:auto;padding:4px;font-size:11px;}
+  .tree .item{padding:1px 4px;cursor:default;display:flex;align-items:center;gap:4px;}
+  .tree .item:hover{background:#e4e0d8;}
+  .tree .item.sel{background:var(--sel);color:var(--seltext);}
+  .props{overflow:auto;font-size:11px;}
+  .prop-row{display:grid;grid-template-columns:110px 1fr;border-bottom:1px solid #c0bdb6;}
+  .prop-row .pname{padding:2px 6px;background:#e8e5dd;border-inline-end:1px solid #b0ada6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .prop-row .pval{padding:0;}
+  .prop-row .pval input{width:100%;border:0;background:transparent;font-family:inherit;font-size:11px;padding:2px 5px;outline:none;}
+  .prop-row .pval input:focus{background:#fff;border:1px solid var(--sel);}
+  .prop-row .pval.color{display:flex;align-items:center;gap:5px;padding:2px 5px;cursor:pointer;}
+  .prop-row .pval.color .sw{width:14px;height:14px;border:1px solid #000;}
+  .codearea{background:#fff;border-top:2px solid var(--sh);position:relative;overflow:hidden;display:flex;flex-direction:column;}
+  .code-title{background:var(--face);border-bottom:1px solid var(--sh);padding:2px 8px;font-weight:bold;display:flex;justify-content:space-between;}
+  .code-body{position:relative;flex:1;overflow:hidden;background:#fff;}
+  .code-body pre,.code-body textarea{position:absolute;inset:0;margin:0;padding:8px 12px;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.45;white-space:pre;overflow:auto;border:0;outline:none;tab-size:4;}
+  .code-body pre{color:#000;pointer-events:none;z-index:1;}
+  .code-body textarea{background:transparent;color:transparent;caret-color:#000;resize:none;z-index:2;}
+  .tk-kw{color:#0000ff;font-weight:bold;} .tk-str{color:#a31515;} .tk-com{color:#008000;font-style:italic;} .tk-num{color:#098658;}
+  .statusbar{background:var(--face);border-top:1px solid var(--hi);display:flex;gap:2px;padding:2px;font-size:11px;}
+  .statusbar .seg{border:1px solid;border-color:var(--sh) var(--hi) var(--hi) var(--sh);padding:1px 8px;}
+  .statusbar .seg.grow{flex:1;}
+  #statusText.running{background:#fff3cd;font-weight:bold;color:#7a5d00;}
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.15);z-index:3000;display:flex;align-items:center;justify-content:center;}
+  .msgbox{background:var(--face);border:2px solid;border-color:var(--hi) var(--dk) var(--dk) var(--hi);box-shadow:4px 4px 12px rgba(0,0,0,.5);min-width:320px;max-width:520px;}
+  .msgbox .tb{background:linear-gradient(to right,var(--title1),var(--title2));color:#fff;font-weight:bold;padding:2px 5px;display:flex;justify-content:space-between;direction:ltr;}
+  .msgbox .tb .x{background:var(--face);color:#000;border:1px solid;border-color:var(--hi) var(--dk) var(--dk) var(--hi);width:16px;height:14px;text-align:center;line-height:12px;font-size:10px;cursor:default;}
+  .msgbox .body{padding:18px 20px;display:flex;gap:14px;align-items:flex-start;}
+  .msgbox .icon{font-size:32px;line-height:1;}
+  .msgbox .text{flex:1;user-select:text;white-space:pre-wrap;font-size:11px;}
+  .msgbox .btns{display:flex;justify-content:center;gap:10px;padding:0 20px 16px;}
+  .msgbox .btns button{min-width:80px;padding:4px 14px;font-family:inherit;font-size:11px;background:var(--face);border:2px solid;border-color:var(--hi) var(--dk) var(--dk) var(--hi);cursor:default;}
+  #runtimeWindow{position:fixed;z-index:1500;box-shadow:8px 8px 24px rgba(0,0,0,.65);border:1px solid #000;}
+  #runtimeWindow .form-titlebar{cursor:move;}
+  #runtimeWindow .btns span:last-child{cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="menubar">
+  <div class="menu"><span data-i18n="menuFile">Archivo</span>
+    <div class="dropdown">
+      <div data-act="new"><span class="check"></span><span data-i18n="miNew">Nuevo proyecto</span></div>
+      <div data-act="save"><span class="check"></span><span data-i18n="miSave">Guardar proyecto...</span></div>
+      <div data-act="load"><span class="check"></span><span data-i18n="miLoad">Abrir proyecto...</span></div>
+      <hr><div data-act="exit"><span class="check"></span><span data-i18n="miExit">Salir</span></div>
+    </div>
+  </div>
+  <div class="menu"><span data-i18n="menuEdit">Edición</span>
+    <div class="dropdown">
+      <div data-act="delete"><span class="check"></span><span data-i18n="miDelete">Eliminar control</span></div>
+      <div data-act="clear"><span class="check"></span><span data-i18n="miClear">Borrar formulario</span></div>
+    </div>
+  </div>
+  <div class="menu"><span data-i18n="menuView">Ver</span>
+    <div class="dropdown">
+      <div data-act="grid"><span class="check" id="chkGrid">✓</span><span data-i18n="miGrid">Cuadrícula</span></div>
+      <div data-act="code"><span class="check" id="chkCode">✓</span><span data-i18n="miCode">Mostrar código</span></div>
+    </div>
+  </div>
+  <div class="menu"><span data-i18n="menuRun">Ejecutar</span>
+    <div class="dropdown">
+      <div data-act="run"><span class="check"></span><span data-i18n="miRun">▶ Iniciar (F5)</span></div>
+      <div data-act="stop"><span class="check"></span><span data-i18n="miStop">■ Detener</span></div>
+    </div>
+  </div>
+  <div class="menu"><span data-i18n="menuHelp">Ayuda</span>
+    <div class="dropdown">
+      <div data-act="examples"><span class="check"></span><span data-i18n="miExamples">Insertar código de ejemplo...</span></div>
+      <div data-act="about"><span class="check"></span><span data-i18n="miAbout">Acerca de</span></div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="menu" id="langMenu"><span>🌐 <span id="langCurrent">Español</span> ▾</span><div class="dropdown" id="langDropdown"></div></div>
+</div>
+
+<div class="toolbar">
+  <div class="tbtn" id="btnRun"  title="Iniciar (F5)">▶</div>
+  <div class="tbtn" id="btnStop" title="Detener">■</div>
+  <div class="tsep"></div>
+  <div class="tbtn" id="btnNew"  title="Nuevo proyecto">📄</div>
+  <div class="tbtn" id="btnSave" title="Guardar proyecto">💾</div>
+  <div class="tbtn" id="btnLoad" title="Abrir proyecto">📂</div>
+  <div class="tsep"></div>
+  <div class="tbtn" id="btnDel"  title="Eliminar selección">🗑</div>
+</div>
+
+<div class="workspace">
+  <div class="toolbox" id="toolbox"></div>
+  <div class="designer" id="designer">
+    <div class="form-window">
+      <div class="form-titlebar">
+        <span>▣</span><span class="cap" id="formCaption">Form1</span>
+        <span class="btns"><span>_</span><span>□</span><span>✕</span></span>
+      </div>
+      <div class="form-canvas" id="formCanvas"></div>
+    </div>
+  </div>
+  <div class="rightpanel">
+    <div style="display:flex;flex-direction:column;overflow:hidden;border-bottom:1px solid var(--sh);">
+      <div class="panel-title"><span data-i18n="panelProject">Proyecto</span> — <span data-i18n="projectName">Proyecto1</span></div>
+      <div class="tree"><div class="item sel">▣ Form1 (Form1)</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;overflow:hidden;">
+      <div class="panel-title" data-i18n="panelProps">Propiedades</div>
+      <div class="props" id="props"></div>
+    </div>
+  </div>
+</div>
+
+<div class="codearea" id="codeArea">
+  <div class="code-title">
+    <span><span data-i18n="codeTitle">Código</span> — Form1 (Code)</span>
+    <span id="codeStatus" style="font-weight:normal;color:#555;" data-i18n="codeGeneral">General</span>
+  </div>
+  <div class="code-body"><pre id="codePre"></pre><textarea id="codeTa" spellcheck="false"></textarea></div>
+</div>
+
+<div class="statusbar">
+  <div class="seg grow" id="statusText"></div>
+  <div class="seg" id="statusSel">Form1</div>
+  <div class="seg" id="statusPos">0, 0</div>
+</div>
+
+<script>
+/* ============================================================
+   VISUAL BASIC HTML — IDE + intérprete VB completo
+   ============================================================ */
+
+const LANGS=[
+  {code:'es',label:'Español',flag:'🇪🇸',dir:'ltr'},{code:'en',label:'English',flag:'🇬🇧',dir:'ltr'},
+  {code:'fr',label:'Français',flag:'🇫🇷',dir:'ltr'},{code:'de',label:'Deutsch',flag:'🇩🇪',dir:'ltr'},
+  {code:'it',label:'Italiano',flag:'🇮🇹',dir:'ltr'},{code:'pt',label:'Português',flag:'🇵🇹',dir:'ltr'},
+  {code:'ru',label:'Русский',flag:'🇷🇺',dir:'ltr'},{code:'ja',label:'日本語',flag:'🇯🇵',dir:'ltr'},
+  {code:'zh',label:'中文',flag:'🇨🇳',dir:'ltr'},{code:'ar',label:'العربية',flag:'🇸🇦',dir:'rtl'}
+];
+
+const I18N={
+ es:{menuFile:'Archivo',menuEdit:'Edición',menuView:'Ver',menuRun:'Ejecutar',menuHelp:'Ayuda',
+  miNew:'Nuevo proyecto',miSave:'Guardar proyecto...',miLoad:'Abrir proyecto...',miExit:'Salir',
+  miDelete:'Eliminar control',miClear:'Borrar formulario',miGrid:'Cuadrícula',miCode:'Mostrar código',
+  miRun:'▶ Iniciar (F5)',miStop:'■ Detener',miAbout:'Acerca de',miExamples:'Insertar código de ejemplo...',
+  panelProject:'Proyecto',panelProps:'Propiedades',projectName:'Proyecto1',
+  codeTitle:'Código',codeGeneral:'General',
+  statusEmpty:'Listo. Edita el código abajo y pulsa F5 para ejecutar.',
+  statusPointer:'Puntero',statusClickToPlace:'Haz clic en el formulario para colocar: ',
+  statusRunning:'▶ TU PROYECTO SE ESTÁ EJECUTANDO (Esc para detener)',
+  propName:'(Nombre)',propCaption:'Título',propText:'Texto',propLeft:'Izquierda',
+  propTop:'Arriba',propWidth:'Ancho',propHeight:'Alto',propFont:'Tamaño letra',
+  propBack:'Color fondo',propFore:'Color texto',propValue:'Valor',
+  confirmClear:'¿Borrar todos los controles del formulario?',
+  confirmNew:'¿Crear un proyecto nuevo vacío? Se perderá el actual.',
+  aboutTitle:'Acerca de',msgOk:'Aceptar',
+  aboutText:'Visual Basic HTML\n\nEscribe código VB y pulsa F5 para ejecutarlo.\n\n© 2026',
+  examplesTitle:'Ejemplos de código',
+  examplesText:'Elige un ejemplo (se insertará en el editor):\n\n1. MsgBox simple\n2. Bucle Do...Loop\n3. For...Next con contador\n4. If/ElseIf/Else\n5. While...Wend\n6. Botón con evento Click',
+  fileInvalid:'Archivo inválido: ',runtimeError:'Error:\n',
+  newFormCode:"' Escribe aquí tu código VB.\n' Ejemplo:\n'\n' Private Sub Form_Load()\n'     Me.Caption = \"Mi programa\"\n'     MsgBox \"¡Hola!\"\n' End Sub\n\n"},
+ en:{menuFile:'File',menuEdit:'Edit',menuView:'View',menuRun:'Run',menuHelp:'Help',
+  miNew:'New project',miSave:'Save project...',miLoad:'Open project...',miExit:'Exit',
+  miDelete:'Delete control',miClear:'Clear form',miGrid:'Grid',miCode:'Show code',
+  miRun:'▶ Start (F5)',miStop:'■ Stop',miAbout:'About',miExamples:'Insert code example...',
+  panelProject:'Project',panelProps:'Properties',projectName:'Project1',
+  codeTitle:'Code',codeGeneral:'General',
+  statusEmpty:'Ready. Edit code below and press F5 to run.',
+  statusPointer:'Pointer',statusClickToPlace:'Click on the form to place: ',
+  statusRunning:'▶ YOUR PROJECT IS RUNNING (Esc to stop)',
+  propName:'(Name)',propCaption:'Caption',propText:'Text',propLeft:'Left',
+  propTop:'Top',propWidth:'Width',propHeight:'Height',propFont:'Font size',
+  propBack:'BackColor',propFore:'ForeColor',propValue:'Value',
+  confirmClear:'Clear all controls?',confirmNew:'Create a new empty project?',
+  aboutTitle:'About',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nWrite VB code and press F5 to run it.\n\n© 2026',
+  examplesTitle:'Code examples',
+  examplesText:'Choose an example:\n\n1. Simple MsgBox\n2. Do...Loop\n3. For...Next counter\n4. If/ElseIf/Else\n5. While...Wend\n6. Button with Click event',
+  fileInvalid:'Invalid file: ',runtimeError:'Error:\n',
+  newFormCode:"' Write your VB code here.\n\n"},
+ fr:{menuFile:'Fichier',menuEdit:'Édition',menuView:'Affichage',menuRun:'Exécuter',menuHelp:'Aide',
+  miNew:'Nouveau projet',miSave:'Enregistrer...',miLoad:'Ouvrir...',miExit:'Quitter',
+  miDelete:'Supprimer contrôle',miClear:'Effacer formulaire',miGrid:'Grille',miCode:'Afficher code',
+  miRun:'▶ Démarrer (F5)',miStop:'■ Arrêter',miAbout:'À propos',miExamples:'Insérer un exemple...',
+  panelProject:'Projet',panelProps:'Propriétés',projectName:'Projet1',
+  codeTitle:'Code',codeGeneral:'Général',
+  statusEmpty:'Prêt. Modifiez le code et appuyez sur F5.',
+  statusPointer:'Curseur',statusClickToPlace:'Cliquez pour placer : ',
+  statusRunning:'▶ VOTRE PROJET S\'EXÉCUTE (Échap pour arrêter)',
+  propName:'(Nom)',propCaption:'Légende',propText:'Texte',propLeft:'Gauche',
+  propTop:'Haut',propWidth:'Largeur',propHeight:'Hauteur',propFont:'Taille',
+  propBack:'Couleur fond',propFore:'Couleur texte',propValue:'Valeur',
+  confirmClear:'Effacer tous les contrôles ?',confirmNew:'Créer un projet vide ?',
+  aboutTitle:'À propos',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nÉcrivez votre code VB et appuyez sur F5.\n\n© 2026',
+  examplesTitle:'Exemples',examplesText:'Choisissez un exemple :\n\n1. MsgBox simple\n2. Do...Loop\n3. Compteur For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. Bouton avec événement',
+  fileInvalid:'Fichier invalide : ',runtimeError:'Erreur :\n',
+  newFormCode:"' Écrivez votre code VB ici.\n\n"},
+ de:{menuFile:'Datei',menuEdit:'Bearbeiten',menuView:'Ansicht',menuRun:'Ausführen',menuHelp:'Hilfe',
+  miNew:'Neues Projekt',miSave:'Speichern...',miLoad:'Öffnen...',miExit:'Beenden',
+  miDelete:'Steuerelement löschen',miClear:'Formular leeren',miGrid:'Raster',miCode:'Code anzeigen',
+  miRun:'▶ Starten (F5)',miStop:'■ Stoppen',miAbout:'Über',miExamples:'Codebeispiel einfügen...',
+  panelProject:'Projekt',panelProps:'Eigenschaften',projectName:'Projekt1',
+  codeTitle:'Code',codeGeneral:'Allgemein',
+  statusEmpty:'Bereit. Code unten bearbeiten und F5 drücken.',
+  statusPointer:'Zeiger',statusClickToPlace:'Klicken zum Platzieren: ',
+  statusRunning:'▶ IHR PROJEKT LÄUFT (Esc zum Stoppen)',
+  propName:'(Name)',propCaption:'Beschriftung',propText:'Text',propLeft:'Links',
+  propTop:'Oben',propWidth:'Breite',propHeight:'Höhe',propFont:'Schriftgröße',
+  propBack:'Hintergrundfarbe',propFore:'Textfarbe',propValue:'Wert',
+  confirmClear:'Alle Steuerelemente löschen?',confirmNew:'Neues leeres Projekt?',
+  aboutTitle:'Über',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nSchreiben Sie VB-Code und drücken Sie F5.\n\n© 2026',
+  examplesTitle:'Beispiele',examplesText:'Beispiel wählen:\n\n1. Einfaches MsgBox\n2. Do...Loop\n3. For...Next Zähler\n4. If/ElseIf/Else\n5. While...Wend\n6. Button mit Click',
+  fileInvalid:'Ungültige Datei: ',runtimeError:'Fehler:\n',
+  newFormCode:"' Schreiben Sie hier Ihren VB-Code.\n\n"},
+ it:{menuFile:'File',menuEdit:'Modifica',menuView:'Visualizza',menuRun:'Esegui',menuHelp:'Aiuto',
+  miNew:'Nuovo progetto',miSave:'Salva...',miLoad:'Apri...',miExit:'Esci',
+  miDelete:'Elimina controllo',miClear:'Cancella modulo',miGrid:'Griglia',miCode:'Mostra codice',
+  miRun:'▶ Avvia (F5)',miStop:'■ Ferma',miAbout:'Informazioni',miExamples:'Inserisci esempio...',
+  panelProject:'Progetto',panelProps:'Proprietà',projectName:'Progetto1',
+  codeTitle:'Codice',codeGeneral:'Generale',
+  statusEmpty:'Pronto. Modifica il codice e premi F5.',
+  statusPointer:'Puntatore',statusClickToPlace:'Clicca per posizionare: ',
+  statusRunning:'▶ IL TUO PROGETTO È IN ESECUZIONE (Esc per fermare)',
+  propName:'(Nome)',propCaption:'Didascalia',propText:'Testo',propLeft:'Sinistra',
+  propTop:'Alto',propWidth:'Larghezza',propHeight:'Altezza',propFont:'Dim.',
+  propBack:'Colore sfondo',propFore:'Colore testo',propValue:'Valore',
+  confirmClear:'Cancellare tutti i controlli?',confirmNew:'Creare un nuovo progetto vuoto?',
+  aboutTitle:'Informazioni',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nScrivi il tuo codice VB e premi F5.\n\n© 2026',
+  examplesTitle:'Esempi',examplesText:'Scegli un esempio:\n\n1. MsgBox semplice\n2. Do...Loop\n3. Contatore For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. Pulsante con evento',
+  fileInvalid:'File non valido: ',runtimeError:'Errore:\n',
+  newFormCode:"' Scrivi qui il tuo codice VB.\n\n"},
+ pt:{menuFile:'Arquivo',menuEdit:'Editar',menuView:'Ver',menuRun:'Executar',menuHelp:'Ajuda',
+  miNew:'Novo projeto',miSave:'Salvar...',miLoad:'Abrir...',miExit:'Sair',
+  miDelete:'Excluir controle',miClear:'Limpar formulário',miGrid:'Grade',miCode:'Mostrar código',
+  miRun:'▶ Iniciar (F5)',miStop:'■ Parar',miAbout:'Sobre',miExamples:'Inserir exemplo...',
+  panelProject:'Projeto',panelProps:'Propriedades',projectName:'Projeto1',
+  codeTitle:'Código',codeGeneral:'Geral',
+  statusEmpty:'Pronto. Edite o código abaixo e aperte F5.',
+  statusPointer:'Ponteiro',statusClickToPlace:'Clique para colocar: ',
+  statusRunning:'▶ SEU PROJETO ESTÁ EXECUTANDO (Esc para parar)',
+  propName:'(Nome)',propCaption:'Legenda',propText:'Texto',propLeft:'Esquerda',
+  propTop:'Topo',propWidth:'Largura',propHeight:'Altura',propFont:'Tam.',
+  propBack:'Cor fundo',propFore:'Cor texto',propValue:'Valor',
+  confirmClear:'Limpar todos os controles?',confirmNew:'Criar novo projeto vazio?',
+  aboutTitle:'Sobre',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nEscreva seu código VB e aperte F5.\n\n© 2026',
+  examplesTitle:'Exemplos',examplesText:'Escolha um exemplo:\n\n1. MsgBox simples\n2. Do...Loop\n3. Contador For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. Botão com evento',
+  fileInvalid:'Arquivo inválido: ',runtimeError:'Erro:\n',
+  newFormCode:"' Escreva aqui seu código VB.\n\n"},
+ ru:{menuFile:'Файл',menuEdit:'Правка',menuView:'Вид',menuRun:'Запуск',menuHelp:'Справка',
+  miNew:'Новый проект',miSave:'Сохранить...',miLoad:'Открыть...',miExit:'Выход',
+  miDelete:'Удалить элемент',miClear:'Очистить форму',miGrid:'Сетка',miCode:'Показать код',
+  miRun:'▶ Запустить (F5)',miStop:'■ Остановить',miAbout:'О программе',miExamples:'Вставить пример...',
+  panelProject:'Проект',panelProps:'Свойства',projectName:'Проект1',
+  codeTitle:'Код',codeGeneral:'Общее',
+  statusEmpty:'Готово. Измените код ниже и нажмите F5.',
+  statusPointer:'Курсор',statusClickToPlace:'Щёлкните для размещения: ',
+  statusRunning:'▶ ВАШ ПРОЕКТ ВЫПОЛНЯЕТСЯ (Esc для остановки)',
+  propName:'(Имя)',propCaption:'Заголовок',propText:'Текст',propLeft:'Слева',
+  propTop:'Сверху',propWidth:'Ширина',propHeight:'Высота',propFont:'Шрифт',
+  propBack:'Цвет фона',propFore:'Цвет текста',propValue:'Значение',
+  confirmClear:'Удалить все элементы?',confirmNew:'Создать новый пустой проект?',
+  aboutTitle:'О программе',msgOk:'ОК',
+  aboutText:'Visual Basic HTML\n\nНапишите код VB и нажмите F5.\n\n© 2026',
+  examplesTitle:'Примеры',examplesText:'Выберите пример:\n\n1. Простой MsgBox\n2. Do...Loop\n3. Счётчик For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. Кнопка с событием',
+  fileInvalid:'Недопустимый файл: ',runtimeError:'Ошибка:\n',
+  newFormCode:"' Пишите код VB здесь.\n\n"},
+ ja:{menuFile:'ファイル',menuEdit:'編集',menuView:'表示',menuRun:'実行',menuHelp:'ヘルプ',
+  miNew:'新しいプロジェクト',miSave:'保存...',miLoad:'開く...',miExit:'終了',
+  miDelete:'削除',miClear:'クリア',miGrid:'グリッド',miCode:'コード表示',
+  miRun:'▶ 開始 (F5)',miStop:'■ 停止',miAbout:'情報',miExamples:'サンプル挿入...',
+  panelProject:'プロジェクト',panelProps:'プロパティ',projectName:'プロジェクト1',
+  codeTitle:'コード',codeGeneral:'全般',
+  statusEmpty:'準備完了。コードを編集して F5 を押してください。',
+  statusPointer:'ポインタ',statusClickToPlace:'クリックして配置: ',
+  statusRunning:'▶ 実行中 (Esc で停止)',
+  propName:'(名前)',propCaption:'キャプション',propText:'テキスト',propLeft:'左',
+  propTop:'上',propWidth:'幅',propHeight:'高さ',propFont:'フォント',
+  propBack:'背景色',propFore:'文字色',propValue:'値',
+  confirmClear:'すべて削除しますか？',confirmNew:'新しい空のプロジェクト？',
+  aboutTitle:'情報',msgOk:'OK',
+  aboutText:'Visual Basic HTML\n\nVB コードを書いて F5。\n\n© 2026',
+  examplesTitle:'サンプル',examplesText:'サンプルを選択:\n\n1. MsgBox\n2. Do...Loop\n3. For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. ボタンイベント',
+  fileInvalid:'無効なファイル: ',runtimeError:'エラー:\n',
+  newFormCode:"' ここに VB コードを書いてください。\n\n"},
+ zh:{menuFile:'文件',menuEdit:'编辑',menuView:'视图',menuRun:'运行',menuHelp:'帮助',
+  miNew:'新建项目',miSave:'保存...',miLoad:'打开...',miExit:'退出',
+  miDelete:'删除控件',miClear:'清空窗体',miGrid:'网格',miCode:'显示代码',
+  miRun:'▶ 启动 (F5)',miStop:'■ 停止',miAbout:'关于',miExamples:'插入代码示例...',
+  panelProject:'项目',panelProps:'属性',projectName:'项目1',
+  codeTitle:'代码',codeGeneral:'通用',
+  statusEmpty:'就绪。编辑下方代码并按 F5 运行。',
+  statusPointer:'指针',statusClickToPlace:'点击放置：',
+  statusRunning:'▶ 你的项目正在运行（Esc 停止）',
+  propName:'(名称)',propCaption:'标题',propText:'文本',propLeft:'左',
+  propTop:'上',propWidth:'宽',propHeight:'高',propFont:'字号',
+  propBack:'背景色',propFore:'前景色',propValue:'值',
+  confirmClear:'清空所有控件？',confirmNew:'创建新空项目？',
+  aboutTitle:'关于',msgOk:'确定',
+  aboutText:'Visual Basic HTML\n\n编写 VB 代码并按 F5。\n\n© 2026',
+  examplesTitle:'示例',examplesText:'选择示例：\n\n1. 简单 MsgBox\n2. Do...Loop\n3. For...Next 计数\n4. If/ElseIf/Else\n5. While...Wend\n6. 按钮事件',
+  fileInvalid:'无效文件：',runtimeError:'错误：\n',
+  newFormCode:"' 在此编写 VB 代码。\n\n"},
+ ar:{menuFile:'ملف',menuEdit:'تحرير',menuView:'عرض',menuRun:'تشغيل',menuHelp:'مساعدة',
+  miNew:'مشروع جديد',miSave:'حفظ...',miLoad:'فتح...',miExit:'خروج',
+  miDelete:'حذف',miClear:'مسح',miGrid:'الشبكة',miCode:'إظهار الشيفرة',
+  miRun:'▶ تشغيل (F5)',miStop:'■ إيقاف',miAbout:'حول',miExamples:'إدراج مثال...',
+  panelProject:'المشروع',panelProps:'الخصائص',projectName:'المشروع1',
+  codeTitle:'الشيفرة',codeGeneral:'عام',
+  statusEmpty:'جاهز. عدّل الكود واضغط F5.',
+  statusPointer:'المؤشر',statusClickToPlace:'انقر للوضع: ',
+  statusRunning:'▶ مشروعك قيد التشغيل (Esc للإيقاف)',
+  propName:'(الاسم)',propCaption:'العنوان',propText:'النص',propLeft:'يسار',
+  propTop:'أعلى',propWidth:'العرض',propHeight:'الارتفاع',propFont:'حجم',
+  propBack:'لون الخلفية',propFore:'لون النص',propValue:'القيمة',
+  confirmClear:'مسح كل العناصر؟',confirmNew:'مشروع فارغ جديد؟',
+  aboutTitle:'حول',msgOk:'موافق',
+  aboutText:'Visual Basic HTML\n\nاكتب كود VB واضغط F5.\n\n© 2026',
+  examplesTitle:'أمثلة',examplesText:'اختر مثالاً:\n\n1. MsgBox بسيط\n2. Do...Loop\n3. For...Next\n4. If/ElseIf/Else\n5. While...Wend\n6. زر مع حدث',
+  fileInvalid:'ملف غير صالح: ',runtimeError:'خطأ:\n',
+  newFormCode:"' اكتب كود VB هنا.\n\n"}
+};
+
+let currentLang = localStorage.getItem('vbhtml-lang') || 'es';
+if (!I18N[currentLang]) currentLang = 'es';
+const t = k => (I18N[currentLang] && I18N[currentLang][k]) || I18N.es[k] || k;
+
+const state = {
+  form:{name:'Form1',caption:'Form1',left:0,top:0,width:420,height:220,
+        backColor:'#d4d0c8',foreColor:'#000000',visible:true,enabled:true},
+  controls:[], selected:null, nextId:1, counters:{},
+  tool:'pointer', running:false, subs:{}, gridOn:true
+};
+
+const CONTROL_SPECS = {
+  CommandButton:{w:90,h:25,def:'Command',prefix:'Command',icon:'▭'},
+  TextBox:      {w:120,h:21,def:'',prefix:'Text',icon:'▤'},
+  Label:        {w:60,h:17,def:'Label',prefix:'Label',icon:'A'},
+  CheckBox:     {w:100,h:17,def:'Check',prefix:'Check',icon:'☑'},
+  OptionButton: {w:100,h:17,def:'Option',prefix:'Option',icon:'◉'},
+  ComboBox:     {w:120,h:21,def:'',prefix:'Combo',icon:'▼'},
+  ListBox:      {w:120,h:90,def:'',prefix:'List',icon:'☰'},
+  Frame:        {w:130,h:90,def:'Frame',prefix:'Frame',icon:'▢'}
+};
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function nextName(type){
+  const spec = CONTROL_SPECS[type];
+  state.counters[type] = (state.counters[type] || 0) + 1;
+  return spec.prefix + state.counters[type];
+}
+function isEditingInput(){
+  const a = document.activeElement;
+  return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA');
+}
+
+/* ---------- Idioma ---------- */
+function buildLangMenu(){
+  const dd = $('#langDropdown'); dd.innerHTML = '';
+  LANGS.forEach(L=>{
+    const item = document.createElement('div');
+    item.innerHTML = `<span class="check">${L.code===currentLang?'✓':''}</span><span>${L.flag}</span><span>${L.label}</span>`;
+    item.addEventListener('click', e=>{
+      e.stopPropagation();
+      currentLang = L.code;
+      localStorage.setItem('vbhtml-lang', L.code);
+      applyLanguage();
+      $$('.menu').forEach(x=>x.classList.remove('open'));
+    });
+    dd.appendChild(item);
+  });
+  const L = LANGS.find(x=>x.code===currentLang) || LANGS[0];
+  $('#langCurrent').textContent = L.label;
+}
+function applyLanguage(){
+  document.documentElement.lang = currentLang;
+  const L = LANGS.find(x=>x.code===currentLang) || LANGS[0];
+  document.documentElement.dir = L.dir;
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  updateStatusText();
+  $('#codeStatus').textContent = t('codeGeneral');
+  buildToolbox(); buildLangMenu(); renderProps();
+}
+function updateStatusText(){
+  const el = $('#statusText');
+  if (state.running){
+    el.textContent = t('statusRunning');
+    el.classList.add('running');
+  } else {
+    el.textContent = state.tool === 'pointer' ? t('statusEmpty')
+                   : (t('statusClickToPlace') + state.tool);
+    el.classList.remove('running');
+  }
+}
+
+/* ---------- Toolbox ---------- */
+function buildToolbox(){
+  const tb = $('#toolbox'); tb.innerHTML = '';
+  const p = document.createElement('div');
+  p.className = 'tool' + (state.tool === 'pointer' ? ' active' : '');
+  p.dataset.tool = 'pointer'; p.title = t('statusPointer'); p.textContent = '➤';
+  tb.appendChild(p);
+  for (const [name, spec] of Object.entries(CONTROL_SPECS)){
+    const d = document.createElement('div');
+    d.className = 'tool' + (state.tool === name ? ' active' : '');
+    d.dataset.tool = name; d.title = name; d.textContent = spec.icon;
+    tb.appendChild(d);
+  }
+  tb.querySelectorAll('.tool').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      tb.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      state.tool = el.dataset.tool;
+      updateStatusText();
+    });
+  });
+}
+
+/* ---------- Render diseñador ---------- */
+function renderForm(){
+  const form = state.form;
+  $('#formCaption').textContent = form.caption || form.name;
+  const cv = $('#formCanvas');
+  cv.style.width = form.width + 'px';
+  cv.style.height = form.height + 'px';
+  cv.style.background = form.backColor;
+  cv.innerHTML = '';
+  state.controls.forEach(ctrl => cv.appendChild(buildControlEl(ctrl, false)));
+  if (!state.running) drawSelection(cv);
+}
+
+function buildControlEl(ctrl, runtime){
+  const el = document.createElement('div');
+  el.className = 'vb-control vb-' + ctrl.type.toLowerCase();
+  el.dataset.id = ctrl.id;
+  el.style.left = ctrl.left + 'px'; el.style.top = ctrl.top + 'px';
+  el.style.width = ctrl.width + 'px'; el.style.height = ctrl.height + 'px';
+  if (ctrl.foreColor) el.style.color = ctrl.foreColor;
+  if (ctrl.fontSize)  el.style.fontSize = ctrl.fontSize + 'px';
+  if (ctrl.backColor && ctrl.type !== 'TextBox') el.style.background = ctrl.backColor;
+  if (!ctrl.visible) el.style.display = 'none';
+  if (!ctrl.enabled) el.style.opacity = '.5';
+  const txt = ctrl.caption ?? '';
+
+  switch(ctrl.type){
+    case 'CommandButton': el.textContent = txt; break;
+    case 'Label':         el.textContent = txt; break;
+    case 'TextBox': {
+      const i = document.createElement('input');
+      i.className = 'vb-textbox'; i.value = ctrl.text || '';
+      if (runtime){
+        i.addEventListener('input', ()=>{ ctrl.text = i.value; ctrl.caption = i.value; fireEvent(ctrl.name+'_Change'); });
+        i.addEventListener('keydown', e=>{ if (e.key === 'Enter') fireEvent(ctrl.name+'_KeyPress'); });
+      } else i.readOnly = true;
+      el.appendChild(i); break;
+    }
+    case 'CheckBox':
+    case 'OptionButton': {
+      const box = document.createElement('div'); box.className='box';
+      const lab = document.createElement('span'); lab.textContent = txt;
+      el.appendChild(box); el.appendChild(lab);
+      el.classList.toggle('checked', !!ctrl.value);
+      if (runtime){
+        el.addEventListener('click', ()=>{
+          if (ctrl.type === 'CheckBox') ctrl.value = ctrl.value ? 0 : 1;
+          else { state.controls.forEach(c=>{ if(c.type==='OptionButton') c.value = 0; }); ctrl.value = 1; }
+          el.classList.toggle('checked', !!ctrl.value);
+          fireEvent(ctrl.name + '_Click');
+        });
+      }
+      break;
+    }
+    case 'ComboBox': {
+      const span = document.createElement('span');
+      span.style.paddingInlineStart = '3px'; span.textContent = ctrl.text || '';
+      const arrow = document.createElement('div'); arrow.className='arrow'; arrow.textContent='▼';
+      el.appendChild(span); el.appendChild(arrow);
+      if (runtime) el.addEventListener('click', ()=> fireEvent(ctrl.name+'_Click'));
+      break;
+    }
+    case 'ListBox': {
+      if (runtime){
+        const list = document.createElement('div');
+        list.style.cssText = 'width:100%;height:100%;padding:2px';
+        (ctrl.items||[]).forEach(it=>{
+          const d = document.createElement('div');
+          d.textContent = it; d.style.padding = '1px 3px';
+          d.addEventListener('click', ()=>{ ctrl.listIndex = it; fireEvent(ctrl.name+'_Click'); });
+          list.appendChild(d);
+        });
+        el.appendChild(list);
+      }
+      break;
+    }
+    case 'Frame': {
+      const fc = document.createElement('div');
+      fc.className = 'framecap'; fc.textContent = txt;
+      el.appendChild(fc); break;
+    }
+  }
+  if (!runtime){
+    el.addEventListener('pointerdown', e => onControlPointerDown(e, ctrl, el));
+  } else if (ctrl.type === 'CommandButton'){
+    el.addEventListener('click', ()=> fireEvent(ctrl.name + '_Click'));
+  }
+  return el;
+}
+
+function drawSelection(cv){
+  cv.querySelectorAll('.selection, .form-selection').forEach(x=>x.remove());
+  if (state.selected === null){
+    const box = document.createElement('div'); box.className = 'form-selection';
+    cv.appendChild(box); return;
+  }
+  const ctrl = state.controls.find(c=>c.id === state.selected);
+  if (!ctrl) return;
+  const box = document.createElement('div');
+  box.className = 'selection';
+  box.style.left = ctrl.left+'px'; box.style.top = ctrl.top+'px';
+  box.style.width = ctrl.width+'px'; box.style.height = ctrl.height+'px';
+  ['nw','n','ne','e','se','s','sw','w'].forEach(dir=>{
+    const h = document.createElement('div');
+    h.className = 'handle h-' + dir;
+    h.addEventListener('pointerdown', e => startResize(e, ctrl, dir));
+    box.appendChild(h);
+  });
+  cv.appendChild(box);
+}
+
+$('#formCanvas').addEventListener('pointerdown', e=>{
+  if (state.running) return;
+  if (e.target.id !== 'formCanvas') return;
+  if (state.tool === 'pointer'){ selectControl(null); return; }
+  const type = state.tool;
+  const spec = CONTROL_SPECS[type];
+  const rect = $('#formCanvas').getBoundingClientRect();
+  const x = Math.max(0, Math.round(e.clientX - rect.left - spec.w/2));
+  const y = Math.max(0, Math.round(e.clientY - rect.top  - spec.h/2));
+  const ctrl = {
+    id: state.nextId++, type, name: nextName(type),
+    caption: spec.def, text: spec.def,
+    left: x, top: y, width: spec.w, height: spec.h,
+    backColor: '#d4d0c8', foreColor: '#000000',
+    fontSize: 11, visible: true, enabled: true, value: 0, items: []
+  };
+  state.controls.push(ctrl);
+  selectControl(ctrl.id);
+  state.tool = 'pointer';
+  $$('#toolbox .tool').forEach(el=>el.classList.toggle('active', el.dataset.tool === 'pointer'));
+  renderForm(); updateStatusText();
+});
+
+let drag = null;
+function onControlPointerDown(e, ctrl, el){
+  if (state.running) return;
+  e.stopPropagation();
+  selectControl(ctrl.id);
+  const startX = e.clientX, startY = e.clientY;
+  const ox = ctrl.left, oy = ctrl.top;
+  drag = {
+    move: ev=>{
+      let nx = Math.max(0, Math.min(state.form.width - ctrl.width, ox + ev.clientX - startX));
+      let ny = Math.max(0, Math.min(state.form.height - ctrl.height, oy + ev.clientY - startY));
+      ctrl.left = Math.round(nx); ctrl.top = Math.round(ny);
+      el.style.left = ctrl.left+'px'; el.style.top = ctrl.top+'px';
+      const sel = $('#formCanvas .selection');
+      if (sel){ sel.style.left = ctrl.left+'px'; sel.style.top = ctrl.top+'px'; }
+      $('#statusPos').textContent = ctrl.left + ', ' + ctrl.top;
+    },
+    up: ()=>{
+      document.removeEventListener('pointermove', drag.move);
+      document.removeEventListener('pointerup', drag.up);
+      drag = null; renderProps();
+    }
+  };
+  document.addEventListener('pointermove', drag.move);
+  document.addEventListener('pointerup', drag.up);
+}
+
+function startResize(e, ctrl, dir){
+  e.stopPropagation();
+  const startX = e.clientX, startY = e.clientY;
+  const ox = ctrl.left, oy = ctrl.top, ow = ctrl.width, oh = ctrl.height;
+  const onMove = ev=>{
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    let L=ox, T=oy, W=ow, H=oh;
+    if (dir.includes('e')) W = ow + dx;
+    if (dir.includes('s')) H = oh + dy;
+    if (dir.includes('w')){ L = ox + dx; W = ow - dx; }
+    if (dir.includes('n')){ T = oy + dy; H = oh - dy; }
+    if (W < 12){ W = 12; if (dir.includes('w')) L = ox + (ow - 12); }
+    if (H < 10){ H = 10; if (dir.includes('n')) T = oy + (oh - 10); }
+    ctrl.left = Math.round(L); ctrl.top = Math.round(T);
+    ctrl.width = Math.round(W); ctrl.height = Math.round(H);
+    renderForm(); renderProps();
+  };
+  const onUp = ()=>{ document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); };
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+
+function selectControl(id){
+  state.selected = id;
+  renderForm(); renderProps();
+  const name = id === null ? state.form.name : (state.controls.find(c=>c.id===id)||{}).name || '—';
+  $('#statusSel').textContent = name;
+}
+
+/* ---------- Propiedades ---------- */
+function renderProps(){
+  const box = $('#props'); box.innerHTML = '';
+  const target = state.selected === null ? state.form : state.controls.find(c=>c.id===state.selected);
+  if (!target) return;
+  const isForm = state.selected === null;
+  const add = (label, val, onchange, type='text') => {
+    const row = document.createElement('div'); row.className = 'prop-row';
+    const n = document.createElement('div'); n.className='pname'; n.textContent = label;
+    const v = document.createElement('div'); v.className='pval';
+    const inp = document.createElement('input');
+    inp.type = type; inp.value = val;
+    inp.addEventListener('change', ()=> onchange(inp.value));
+    v.appendChild(inp); row.appendChild(n); row.appendChild(v); box.appendChild(row);
+  };
+  const addColor = (label, val, onchange) => {
+    const row = document.createElement('div'); row.className = 'prop-row';
+    const n = document.createElement('div'); n.className='pname'; n.textContent = label;
+    const v = document.createElement('div'); v.className='pval color';
+    const sw = document.createElement('div'); sw.className='sw'; sw.style.background = val;
+    const tx = document.createElement('span'); tx.textContent = val;
+    v.appendChild(sw); v.appendChild(tx);
+    v.addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type='color'; inp.value=val; inp.style.position='fixed'; inp.style.opacity='0';
+      document.body.appendChild(inp); inp.click();
+      inp.addEventListener('input', ()=>{ sw.style.background = inp.value; tx.textContent = inp.value; });
+      inp.addEventListener('change', ()=>{ onchange(inp.value); inp.remove(); });
+    });
+    row.appendChild(n); row.appendChild(v); box.appendChild(row);
+  };
+
+  add(t('propName'), target.name, v=>{ v=v.trim().replace(/\s+/g,''); if(v) target.name=v; renderProps(); });
+  if (isForm || target.type !== 'TextBox')
+    add(t('propCaption'), target.caption||'', v=>{ target.caption=v; target.text=v; renderForm(); });
+  if (!isForm && (target.type==='TextBox' || target.type==='ComboBox'))
+    add(t('propText'), target.text||'', v=>{ target.text=v; target.caption=v; renderForm(); });
+  add(t('propLeft'),   target.left,   v=>{ target.left=parseInt(v)||0; renderForm(); },'number');
+  add(t('propTop'),    target.top,    v=>{ target.top=parseInt(v)||0; renderForm(); },'number');
+  add(t('propWidth'),  target.width,  v=>{ target.width=Math.max(8,parseInt(v)||8); renderForm(); },'number');
+  add(t('propHeight'), target.height, v=>{ target.height=Math.max(8,parseInt(v)||8); renderForm(); },'number');
+  add(t('propFont'),   target.fontSize||11, v=>{ target.fontSize=parseInt(v)||11; renderForm(); },'number');
+  addColor(t('propBack'), target.backColor||'#d4d0c8', v=>{ target.backColor=v; renderForm(); });
+  addColor(t('propFore'), target.foreColor||'#000000', v=>{ target.foreColor=v; renderForm(); });
+  if (!isForm)
+    add(t('propValue'), target.value ?? 0, v=>{ target.value=(v==='1'||v==='true')?1:0; renderForm(); });
+}
+
+/* ---------- Editor de código ---------- */
+const VB_KEYWORDS = new Set(('private public sub end if then else elseif dim as for to step next while wend '+
+  'do loop until select case function exit set new and or not mod is true false integer string long single double '+
+  'boolean variant object me byval byref msgbox print unload call let const redim with goto on error resume cls stop').split(' '));
+
+function highlightVB(code){
+  let out='', i=0;
+  while (i < code.length){
+    const ch = code[i];
+    if (ch === "'"){
+      let j = code.indexOf('\n', i); if (j === -1) j = code.length;
+      out += '<span class="tk-com">'+esc(code.slice(i,j))+'</span>'; i = j;
+    } else if (ch === '"'){
+      let j = i+1;
+      while (j < code.length){
+        if (code[j] === '"'){ if (code[j+1] === '"'){ j+=2; continue; } j++; break; }
+        j++;
+      }
+      out += '<span class="tk-str">'+esc(code.slice(i,j))+'</span>'; i = j;
+    } else if (/[A-Za-z_]/.test(ch)){
+      let j = i;
+      while (j < code.length && /[A-Za-z0-9_]/.test(code[j])) j++;
+      const word = code.slice(i,j);
+      out += VB_KEYWORDS.has(word.toLowerCase()) ? '<span class="tk-kw">'+esc(word)+'</span>' : esc(word);
+      i = j;
+    } else if (/[0-9]/.test(ch)){
+      let j = i;
+      while (j < code.length && /[0-9.]/.test(code[j])) j++;
+      out += '<span class="tk-num">'+esc(code.slice(i,j))+'</span>'; i = j;
+    } else { out += esc(ch); i++; }
+  }
+  return out;
+}
+
+const codeTa = $('#codeTa');
+const codePre = $('#codePre');
+function syncCode(){
+  codePre.innerHTML = highlightVB(codeTa.value) + '\n';
+  codePre.scrollTop = codeTa.scrollTop;
+  codePre.scrollLeft = codeTa.scrollLeft;
+}
+codeTa.addEventListener('input', ()=>{ syncCode(); updateStatusText(); });
+codeTa.addEventListener('scroll', ()=>{ codePre.scrollTop = codeTa.scrollTop; codePre.scrollLeft = codeTa.scrollLeft; });
+codeTa.addEventListener('keydown', e=>{
+  if (e.key === 'Tab'){
+    e.preventDefault();
+    const s = codeTa.selectionStart, en = codeTa.selectionEnd;
+    codeTa.value = codeTa.value.slice(0,s) + '    ' + codeTa.value.slice(en);
+    codeTa.selectionStart = codeTa.selectionEnd = s + 4;
+    syncCode();
+  }
+});
+
+/* ---------- Intérprete VB ---------- */
+function stripComment(line){
+  let inStr=false;
+  for (let i=0;i<line.length;i++){
+    const c = line[i];
+    if (c === '"'){ if (inStr && line[i+1]==='"'){i++; continue;} inStr = !inStr; }
+    else if (!inStr && c === "'") return line.slice(0,i);
+  }
+  return line;
+}
+function splitTopLevel(s, sep){
+  const parts=[]; let depth=0, inStr=false, cur='';
+  for (let i=0;i<s.length;i++){
+    const c=s[i];
+    if (c === '"'){ cur+=c; if (inStr && s[i+1]==='"'){ cur+=s[i+1]; i++; continue; } inStr=!inStr; continue; }
+    if (!inStr){
+      if (c==='(') depth++;
+      else if (c===')') depth--;
+      else if (c===sep && depth===0){ parts.push(cur); cur=''; continue; }
+    }
+    cur+=c;
+  }
+  parts.push(cur); return parts;
+}
+function tokenize(s){
+  const tokens=[]; let i=0;
+  while (i<s.length){
+    const ch=s[i];
+    if (/\s/.test(ch)){ i++; continue; }
+    if (ch === '"'){
+      let j=i+1, val='';
+      while (j<s.length){
+        if (s[j] === '"'){ if (s[j+1]==='"'){ val+='"'; j+=2; continue; } j++; break; }
+        val += s[j++];
+      }
+      tokens.push({type:'str',value:val}); i=j; continue;
+    }
+    if (/[0-9]/.test(ch) || (ch==='.' && /[0-9]/.test(s[i+1]))){
+      let j=i; while (j<s.length && /[0-9.]/.test(s[j])) j++;
+      tokens.push({type:'num',value:parseFloat(s.slice(i,j))}); i=j; continue;
+    }
+    if (/[A-Za-z_]/.test(ch)){
+      let j=i; while (j<s.length && /[A-Za-z0-9_]/.test(s[j])) j++;
+      tokens.push({type:'id',value:s.slice(i,j)}); i=j; continue;
+    }
+    const two = s.substr(i,2);
+    if (two==='<=' || two==='>=' || two==='<>'){ tokens.push({type:'op',value:two}); i+=2; continue; }
+    if ('+-*/&<>=(),.'.includes(ch)){ tokens.push({type:'op',value:ch}); i++; continue; }
+    i++;
+  }
+  tokens.push({type:'eof'}); return tokens;
+}
+function evalExpr(expr, ctx){
+  const tokens = tokenize(expr); let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+  function parseCmp(){
+    let l = parseAdd();
+    while (peek().type === 'op' && ['=','<>','<','>','<=','>='].includes(peek().value)){
+      const op = next().value; const r = parseAdd(); l = compare(op, l, r);
+    }
+    return l;
+  }
+  function parseAdd(){
+    let l = parseMul();
+    while (peek().type === 'op' && ['+','-','&'].includes(peek().value)){
+      const op = next().value; const r = parseMul();
+      if (op === '&') l = String(l)+String(r);
+      else if (op === '+') l = (typeof l==='string' || typeof r==='string') ? String(l)+String(r) : Number(l)+Number(r);
+      else l = Number(l) - Number(r);
+    }
+    return l;
+  }
+  function parseMul(){
+    let l = parseUnary();
+    while (peek().type === 'op' && ['*','/'].includes(peek().value)){
+      const op = next().value; const r = parseUnary();
+      l = op === '*' ? Number(l)*Number(r) : Number(l)/Number(r);
+    }
+    return l;
+  }
+  function parseUnary(){
+    if (peek().type === 'op' && peek().value === '-'){ next(); return -Number(parseUnary()); }
+    return parsePrimary();
+  }
+  function parsePrimary(){
+    const tok = peek();
+    if (tok.type === 'num'){ next(); return tok.value; }
+    if (tok.type === 'str'){ next(); return tok.value; }
+    if (tok.type === 'op' && tok.value === '('){
+      next(); const v = parseCmp(); if (peek().type==='op' && peek().value===')') next(); return v;
+    }
+    if (tok.type === 'id'){
+      next(); const name = tok.value;
+      if (peek().type === 'op' && peek().value === '.'){
+        next(); const prop = next().value; return getObjectProp(name, prop);
+      }
+      const ln = name.toLowerCase();
+      if (ln === 'true') return true;
+      if (ln === 'false') return false;
+      if (ln in ctx.vars) return ctx.vars[ln];
+      const c = state.controls.find(x=>x.name.toLowerCase() === ln);
+      if (c) return c.caption ?? c.text ?? '';
+      if (ln === state.form.name.toLowerCase()) return state.form.caption || '';
+      return 0;
+    }
+    next(); return 0;
+  }
+  return parseCmp();
+}
+function compare(op, a, b){
+  const aNum = typeof a === 'number' || (typeof a === 'string' && a !== '' && !isNaN(Number(a)));
+  const bNum = typeof b === 'number' || (typeof b === 'string' && b !== '' && !isNaN(Number(b)));
+  const useNum = aNum && bNum;
+  const A = useNum ? Number(a) : String(a).toLowerCase();
+  const B = useNum ? Number(b) : String(b).toLowerCase();
+  return { '=': A===B, '<>': A!==B, '<': A<B, '>': A>B, '<=': A<=B, '>=': A>=B }[op] || false;
+}
+function toBool(v){
+  if (v === true || v === 1) return true;
+  if (v === false || v === 0 || v == null) return false;
+  const s = String(v).toLowerCase();
+  return s === 'true' || s === '1' || (s !== '' && !isNaN(Number(s)) && Number(s) !== 0);
+}
+function getObjectProp(obj, prop){
+  let target;
+  if (obj.toLowerCase() === 'me' || obj.toLowerCase() === state.form.name.toLowerCase()) target = state.form;
+  else target = state.controls.find(c=>c.name.toLowerCase() === obj.toLowerCase());
+  if (!target) return '';
+  const p = prop.toLowerCase();
+  return target[p] ?? target.caption ?? '';
+}
+function setObjectProp(obj, prop, value){
+  let target;
+  if (obj.toLowerCase() === 'me' || obj.toLowerCase() === state.form.name.toLowerCase()) target = state.form;
+  else target = state.controls.find(c=>c.name.toLowerCase() === obj.toLowerCase());
+  if (!target) return;
+  const p = prop.toLowerCase();
+  if (p === 'caption'){ target.caption = String(value); target.text = String(value); }
+  else if (p === 'text'){ target.text = String(value); target.caption = String(value); }
+  else if (p === 'left' || p === 'top' || p === 'width' || p === 'height'){ target[p] = Number(value); }
+  else if (p === 'backcolor'){ target.backColor = String(value); }
+  else if (p === 'forecolor'){ target.foreColor = String(value); }
+  else if (p === 'value'){ target.value = toBool(value) ? 1 : (isNaN(value) ? value : Number(value)); }
+  else if (p === 'visible'){ target.visible = toBool(value); }
+  else if (p === 'enabled'){ target.enabled = toBool(value); }
+  else target[p] = value;
+  refreshControl(target);
+}
+function refreshControl(target){
+  if (target === state.form){
+    ['#formCanvas', '#runtimeCanvas'].forEach(sel=>{
+      const cv = document.querySelector(sel);
+      if (cv){ cv.style.width = target.width + 'px'; cv.style.height = target.height + 'px'; cv.style.background = target.backColor; }
+    });
+    const fc = $('#formCaption'); if (fc) fc.textContent = target.caption || target.name;
+    const rw = document.getElementById('runtimeWindow');
+    if (rw){
+      rw.style.background = target.backColor;
+      const cap = rw.querySelector('.form-titlebar .cap');
+      if (cap) cap.textContent = target.caption || target.name;
+    }
+    return;
+  }
+  ['#formCanvas', '#runtimeCanvas'].forEach(sel=>{
+    const cv = document.querySelector(sel);
+    if (!cv) return;
+    const el = cv.querySelector('.vb-control[data-id="'+target.id+'"]');
+    if (!el) return;
+    el.style.left = target.left+'px'; el.style.top = target.top+'px';
+    el.style.width = target.width+'px'; el.style.height = target.height+'px';
+    if (target.foreColor) el.style.color = target.foreColor;
+    if (target.backColor && target.type !== 'TextBox') el.style.background = target.backColor;
+    if (target.fontSize) el.style.fontSize = target.fontSize + 'px';
+    el.style.display = target.visible ? '' : 'none';
+    el.style.opacity = target.enabled ? '' : '.5';
+    const cap = target.caption ?? '';
+    switch (target.type){
+      case 'CommandButton': case 'Label': el.textContent = cap; break;
+      case 'TextBox': { const inp = el.querySelector('input'); if (inp && document.activeElement !== inp) inp.value = target.text || ''; break; }
+      case 'CheckBox': case 'OptionButton':{ const sp = el.querySelector('span'); if (sp) sp.textContent = cap; el.classList.toggle('checked', !!target.value); break; }
+      case 'ComboBox':{ const sp = el.querySelector('span'); if (sp) sp.textContent = target.text || ''; break; }
+      case 'Frame':{ const fc2 = el.querySelector('.framecap'); if (fc2) fc2.textContent = cap; break; }
+    }
+  });
+}
+
+function parseProgram(code){
+  const subs = {}, lines = code.split(/\r?\n/); let i = 0;
+  while (i < lines.length){
+    const line = lines[i].trim();
+    const m = line.match(/^(?:Private |Public )?Sub\s+(\w+)\s*\((.*?)\)/i);
+    if (m){
+      const name = m[1], body = []; i++;
+      while (i < lines.length && !/^\s*End\s+Sub\b/i.test(lines[i])){ body.push(lines[i]); i++; }
+      subs[name] = body;
+    }
+    i++;
+  }
+  return subs;
+}
+
+async function execBlock(lines, ctx){
+  let i = 0;
+  while (i < lines.length){
+    if (ctx.stopped) return;
+    const line = stripComment(lines[i]).trim();
+    if (!line){ i++; continue; }
+
+    // If / ElseIf / Else
+    const ifm = line.match(/^If\s+(.+?)\s+Then\s*(.*)$/i);
+    if (ifm){
+      const cond = ifm[1], inline = ifm[2].trim();
+      if (inline){ if (toBool(evalExpr(cond, ctx))) await execSimple(inline, ctx); i++; continue; }
+      let depth = 1, j = i + 1;
+      for (; j < lines.length; j++){
+        const l = stripComment(lines[j]).trim();
+        if (/^If\b.*\bThen\s*$/i.test(l)) depth++;
+        else if (/^End\s+If\b/i.test(l)){ depth--; if (depth === 0) break; }
+      }
+      const endIdx = j;
+      const branches = []; let curBr = { cond, lines: [] }, d2 = 0;
+      for (let k = i + 1; k < endIdx; k++){
+        const l = stripComment(lines[k]).trim();
+        if (/^If\b.*\bThen\s*$/i.test(l)) d2++;
+        else if (/^End\s+If\b/i.test(l)) d2--;
+        if (d2 === 0){
+          const em = l.match(/^ElseIf\s+(.+?)\s+Then\s*$/i);
+          if (em){ branches.push(curBr); curBr = { cond: em[1], lines: [] }; continue; }
+          if (/^Else\s*$/i.test(l)){ branches.push(curBr); curBr = { cond: null, lines: [] }; continue; }
+        }
+        curBr.lines.push(lines[k]);
+      }
+      branches.push(curBr);
+      for (const br of branches){
+        if (br.cond === null || toBool(evalExpr(br.cond, ctx))){ await execBlock(br.lines, ctx); break; }
+      }
+      i = endIdx + 1; continue;
+    }
+
+    // For ... Next
+    const fm = line.match(/^For\s+(\w+)\s*=\s*(.+?)\s+To\s+(.+?)(?:\s+Step\s+(.+))?$/i);
+    if (fm){
+      const varName = fm[1].toLowerCase();
+      const fromV = Number(evalExpr(fm[2], ctx));
+      const toV   = Number(evalExpr(fm[3], ctx));
+      const stepV = fm[4] ? Number(evalExpr(fm[4], ctx)) : 1;
+      let depth = 1, j = i + 1;
+      for (; j < lines.length; j++){
+        const l = stripComment(lines[j]).trim();
+        if (/^For\b/i.test(l)) depth++;
+        else if (/^Next\b/i.test(l)){ depth--; if (depth === 0) break; }
+      }
+      const endIdx = j, body = lines.slice(i + 1, endIdx);
+      if (stepV !== 0){
+        for (let v = fromV; stepV > 0 ? v <= toV : v >= toV; v += stepV){
+          if (ctx.stopped) return;
+          ctx.vars[varName] = v;
+          await execBlock(body, ctx);
+        }
+      }
+      i = endIdx + 1; continue;
+    }
+
+    // Do ... Loop
+    const doMatch = line.match(/^Do\b(.*)$/i);
+    if (doMatch){
+      const header = doMatch[1].trim();
+      let headerType = null, headerCond = null;
+      const hw = header.match(/^While\s+(.+)$/i);
+      const hu = header.match(/^Until\s+(.+)$/i);
+      if (hw){ headerType = 'while'; headerCond = hw[1]; }
+      else if (hu){ headerType = 'until'; headerCond = hu[1]; }
+
+      let depth = 1, j = i + 1;
+      for (; j < lines.length; j++){
+        const l = stripComment(lines[j]).trim();
+        if (/^Do\b/i.test(l)) depth++;
+        else if (/^Loop\b/i.test(l)){ depth--; if (depth === 0) break; }
+      }
+      const loopLine = stripComment(lines[j]).trim();
+      const tailMatch = loopLine.match(/^Loop\b(.*)$/i);
+      let tailType = null, tailCond = null;
+      if (tailMatch && tailMatch[1].trim()){
+        const tt = tailMatch[1].trim();
+        const tw = tt.match(/^While\s+(.+)$/i);
+        const tu = tt.match(/^Until\s+(.+)$/i);
+        if (tw){ tailType = 'while'; tailCond = tw[1]; }
+        else if (tu){ tailType = 'until'; tailCond = tu[1]; }
+      }
+      const body = lines.slice(i + 1, j);
+      let safety = 0;
+      const MAX_ITER = 1000000;
+      while (safety++ < MAX_ITER){
+        if (ctx.stopped) return;
+        if (headerType === 'while' && !toBool(evalExpr(headerCond, ctx))) break;
+        if (headerType === 'until' &&  toBool(evalExpr(headerCond, ctx))) break;
+        await execBlock(body, ctx);
+        if (ctx.stopped) return;
+        if (tailType === 'while' && !toBool(evalExpr(tailCond, ctx))) break;
+        if (tailType === 'until' &&  toBool(evalExpr(tailCond, ctx))) break;
+        if (safety % 50 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      i = j + 1; continue;
+    }
+
+    // While ... Wend
+    const wm = line.match(/^While\s+(.+)$/i);
+    if (wm){
+      const cond = wm[1];
+      let depth = 1, j = i + 1;
+      for (; j < lines.length; j++){
+        const l = stripComment(lines[j]).trim();
+        if (/^While\b/i.test(l)) depth++;
+        else if (/^Wend\b/i.test(l)){ depth--; if (depth === 0) break; }
+      }
+      const body = lines.slice(i + 1, j);
+      let safety = 0;
+      const MAX_ITER = 1000000;
+      while (safety++ < MAX_ITER){
+        if (ctx.stopped) return;
+        if (!toBool(evalExpr(cond, ctx))) break;
+        await execBlock(body, ctx);
+        if (safety % 50 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      i = j + 1; continue;
+    }
+
+    await execSimple(line, ctx);
+    i++;
+  }
+}
+
+async function execSimple(line, ctx){
+  const mb = line.match(/^MsgBox\s+(.+)$/i);
+  if (mb){
+    const parts = splitTopLevel(mb[1], ',');
+    const msg = String(evalExpr(parts[0], ctx));
+    let title = 'Visual Basic HTML', icon = 'info';
+    for (let k = 1; k < parts.length; k++){
+      const p = parts[k].trim().toLowerCase();
+      if (p.startsWith('"')) title = String(evalExpr(parts[k], ctx));
+      else if (p === 'vbinformation') icon = 'info';
+      else if (p === 'vbexclamation') icon = 'warn';
+      else if (p === 'vbcritical')    icon = 'err';
+      else if (p === 'vbquestion')    icon = 'quest';
+    }
+    await showMsgBox(msg, title, icon); return;
+  }
+  if (/^End\s*$/i.test(line) || /^Unload\s+Me\s*$/i.test(line)){ ctx.stopped = true; stopRun(); return; }
+  if (/^Print\b/i.test(line)){
+    const v = line.replace(/^Print\s*/i, '');
+    console.log('Print:', evalExpr(v, ctx));
+    return;
+  }
+  const dim = line.match(/^Dim\s+(\w+)\s+As\s+(\w+)/i);
+  if (dim){ ctx.vars[dim[1].toLowerCase()] = (dim[2].toLowerCase() === 'string') ? '' : 0; return; }
+  const asg = line.match(/^([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)\s*=\s*(.+)$/);
+  if (asg){
+    const value = evalExpr(asg[2], ctx);
+    const lhs = asg[1];
+    if (lhs.includes('.')){ const [o, p] = lhs.split('.'); setObjectProp(o, p, value); }
+    else ctx.vars[lhs.toLowerCase()] = value;
+    return;
+  }
+}
+
+async function fireEvent(name){
+  if (!state.running) return;
+  const key = Object.keys(state.subs).find(k => k.toLowerCase() === name.toLowerCase());
+  if (!key) return;
+  const ctx = { vars:{}, stopped:false };
+  try { await execBlock(state.subs[key], ctx); }
+  catch(err){
+    console.error(err);
+    showMsgBox((I18N[currentLang]?.runtimeError || 'Error:\n') + err.message, 'Visual Basic HTML', 'err');
+  }
+}
+
+function showMsgBox(text, title, icon){
+  return new Promise(resolve => {
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    const icons = { info:'ℹ️', warn:'⚠️', err:'❌', quest:'❓' };
+    back.innerHTML = `
+      <div class="msgbox">
+        <div class="tb"><span>${esc(title||'Visual Basic HTML')}</span><span class="x">✕</span></div>
+        <div class="body"><div class="icon">${icons[icon]||icons.info}</div><div class="text">${esc(text)}</div></div>
+        <div class="btns"><button>${esc(t('msgOk'))}</button></div>
+      </div>`;
+    document.body.appendChild(back);
+    let resolved = false;
+    const close = ()=>{ if (resolved) return; resolved = true; back.remove(); document.removeEventListener('keydown', onKey); resolve(); };
+    const onKey = e=>{ if (e.key === 'Enter' || e.key === 'Escape'){ e.preventDefault(); close(); } };
+    back.querySelector('.x').addEventListener('click', close);
+    back.querySelector('button').addEventListener('click', close);
+    back.addEventListener('click', e=>{ if (e.target === back) close(); });
+    document.addEventListener('keydown', onKey);
+    setTimeout(()=>back.querySelector('button').focus(), 0);
+  });
+}
+
+/* ---------- Ventana de ejecución ---------- */
+function buildRuntimeWindow(){
+  const old = document.getElementById('runtimeWindow');
+  if (old) old.remove();
+
+  const win = document.createElement('div');
+  win.id = 'runtimeWindow';
+  win.className = 'form-window';
+  win.style.background = state.form.backColor || '#d4d0c8';
+
+  const w = state.form.width + 4;
+  const h = state.form.height + 24;
+  const left = Math.max(20, Math.round((window.innerWidth - w) / 2));
+  const top  = Math.max(20, Math.round((window.innerHeight - h) / 2) - 60);
+  win.style.left = left + 'px';
+  win.style.top = top + 'px';
+
+  const tb = document.createElement('div');
+  tb.className = 'form-titlebar';
+  tb.innerHTML = `<span>▣</span><span class="cap">${esc(state.form.caption || state.form.name)}</span>
+                  <span class="btns"><span>_</span><span>□</span><span title="${esc(t('miStop'))}">✕</span></span>`;
+  tb.querySelector('.btns span:last-child').addEventListener('click', stopRun);
+  win.appendChild(tb);
+
+  const cv = document.createElement('div');
+  cv.className = 'form-canvas';
+  cv.id = 'runtimeCanvas';
+  cv.style.width = state.form.width + 'px';
+  cv.style.height = state.form.height + 'px';
+  cv.style.background = state.form.backColor;
+  cv.style.position = 'relative';
+  cv.addEventListener('click', e=>{ if (e.target === cv) fireEvent('Form_Click'); });
+  state.controls.forEach(ctrl => cv.appendChild(buildControlEl(ctrl, true)));
+  win.appendChild(cv);
+
+  document.body.appendChild(win);
+
+  tb.addEventListener('pointerdown', e=>{
+    if (e.target.closest('.btns')) return;
+    const rect = win.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY, ox = rect.left, oy = rect.top;
+    const move = ev=>{ win.style.left = (ox + ev.clientX - sx)+'px'; win.style.top = (oy + ev.clientY - sy)+'px'; };
+    const up = ()=>{ document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+
+/* ---------- Ejecutar / Detener ---------- */
+function startRun(){
+  if (state.running) return;
+  state.subs = parseProgram(codeTa.value);
+  state.running = true;
+  state.selected = null;
+  document.body.classList.add('running');
+  renderForm(); renderProps();
+  buildRuntimeWindow();
+  updateStatusText();
+  fireEvent('Form_Load').catch(console.error);
+}
+function stopRun(){
+  if (!state.running) return;
+  state.running = false;
+  document.body.classList.remove('running');
+  const win = document.getElementById('runtimeWindow');
+  if (win) win.remove();
+  updateStatusText(); renderForm(); renderProps();
+}
+
+/* ---------- Menús, toolbar, atajos ---------- */
+$$('.menu').forEach(m=>{
+  m.addEventListener('click', e=>{
+    if (e.target.closest('.dropdown div')) return;
+    const was = m.classList.contains('open');
+    $$('.menu').forEach(x=>x.classList.remove('open'));
+    if (!was) m.classList.add('open');
+    e.stopPropagation();
+  });
+});
+document.addEventListener('click', ()=> $$('.menu').forEach(x=>x.classList.remove('open')));
+$$('.dropdown div[data-act]').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    $$('.menu').forEach(x=>x.classList.remove('open'));
+    doAction(item.dataset.act);
+  });
+});
+
+const EXAMPLES = {
+  1: `Private Sub Form_Load()
+    MsgBox "¡Hola, mundo!", vbInformation, "Saludo"
+End Sub
+`,
+  2: `Private Sub Form_Load()
+    Dim i As Integer
+    i = 1
+    Do
+        MsgBox "Vuelta número " & i
+        i = i + 1
+        If i > 5 Then End
+    Loop
+End Sub
+`,
+  3: `Private Sub Form_Load()
+    Dim i As Integer
+    Dim suma As Integer
+    suma = 0
+    For i = 1 To 10
+        suma = suma + i
+    Next
+    MsgBox "La suma del 1 al 10 es: " & suma
+End Sub
+`,
+  4: `Private Sub Form_Load()
+    Dim nota As Integer
+    nota = 7
+    If nota >= 9 Then
+        MsgBox "Excelente"
+    ElseIf nota >= 7 Then
+        MsgBox "Bien"
+    ElseIf nota >= 5 Then
+        MsgBox "Aprobado"
+    Else
+        MsgBox "Suspenso"
+    End If
+End Sub
+`,
+  5: `Private Sub Form_Load()
+    Dim x As Integer
+    x = 1
+    While x <= 5
+        MsgBox "x = " & x
+        x = x + 1
+    Wend
+    MsgBox "Fin"
+End Sub
+`,
+  6: `Private Sub Command1_Click()
+    MsgBox "¡Has pulsado el botón!"
+End Sub
+
+Private Sub Form_Load()
+    Me.Caption = "Pulsa el botón"
+    Command1.Caption = "Púlsame"
+End Sub
+`
+};
+
+function doAction(act){
+  switch(act){
+    case 'new':     newProject(); break;
+    case 'save':    saveProject(); break;
+    case 'load':    loadProject(); break;
+    case 'exit':    stopRun(); break;
+    case 'delete':  deleteSelected(); break;
+    case 'clear':   if (confirm(t('confirmClear'))){ state.controls = []; renderForm(); renderProps(); updateStatusText(); } break;
+    case 'grid':    toggleGrid(); break;
+    case 'code':    toggleCode(); break;
+    case 'run':     startRun(); break;
+    case 'stop':    stopRun(); break;
+    case 'examples': showExamples(); break;
+    case 'about':   showMsgBox(t('aboutText'), t('aboutTitle'), 'info'); break;
+  }
+}
+function showExamples(){
+  const code = prompt(t('examplesText'), '1');
+  if (!code) return;
+  const ex = EXAMPLES[code.trim()];
+  if (!ex){ alert('1-6'); return; }
+  codeTa.value = ex;
+  syncCode();
+  updateStatusText();
+}
+function toggleCode(){
+  const ca = $('#codeArea');
+  ca.style.display = (ca.style.display === 'none') ? '' : 'none';
+  $('#chkCode').textContent = (ca.style.display === 'none') ? '' : '✓';
+}
+function toggleGrid(){
+  state.gridOn = !state.gridOn;
+  $('#designer').style.backgroundImage = state.gridOn
+    ? 'linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px)'
+    : 'none';
+  $('#chkGrid').textContent = state.gridOn ? '✓' : '';
+}
+
+$('#btnRun').addEventListener('click', startRun);
+$('#btnStop').addEventListener('click', stopRun);
+$('#btnNew').addEventListener('click', newProject);
+$('#btnSave').addEventListener('click', saveProject);
+$('#btnLoad').addEventListener('click', loadProject);
+$('#btnDel').addEventListener('click', deleteSelected);
+
+function deleteSelected(){
+  if (state.selected === null) return;
+  state.controls = state.controls.filter(c=>c.id !== state.selected);
+  state.selected = null;
+  renderForm(); renderProps(); updateStatusText();
+}
+function newProject(){
+  if (!confirm(t('confirmNew'))) return;
+  state.form = { name:'Form1',caption:'Form1',left:0,top:0,width:420,height:220,
+                 backColor:'#d4d0c8',foreColor:'#000000',visible:true,enabled:true };
+  state.controls = []; state.counters = {}; state.nextId = 1; state.selected = null;
+  codeTa.value = t('newFormCode');
+  syncCode();
+  renderForm(); renderProps(); updateStatusText();
+}
+function saveProject(){
+  const data = { form: state.form, controls: state.controls, code: codeTa.value, counters: state.counters };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'proyecto1.vbhtml.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function loadProject(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,.vbhtml.json';
+  inp.addEventListener('change', ()=>{
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      try{
+        const d = JSON.parse(r.result);
+        state.form = d.form; state.controls = d.controls || [];
+        state.counters = d.counters || {};
+        state.nextId = state.controls.reduce((m,c)=>Math.max(m,c.id||0), 0) + 1;
+        codeTa.value = d.code || '';
+        syncCode(); state.selected = null;
+        renderForm(); renderProps(); updateStatusText();
+      }catch(e){ alert(t('fileInvalid') + e.message); }
+    };
+    r.readAsText(f);
+  });
+  inp.click();
+}
+
+document.addEventListener('keydown', e=>{
+  if (e.key === 'F5'){ e.preventDefault(); startRun(); return; }
+  if (e.key === 'Escape' && !$('.modal-back') && state.running){ stopRun(); return; }
+  if (e.key === 'Delete' && !isEditingInput() && !state.running) deleteSelected();
+});
+
+/* ============================================================
+   ARRANQUE: un botón de ejemplo + código funcional
+   (para que veas que TODO funciona desde el primer segundo)
+   ============================================================ */
+function boot(){
+  // Formulario con UN control para que no se vea vacío
+  state.form = { name:'Form1', caption:'Mi primer programa', left:0, top:0,
+                 width:420, height:220,
+                 backColor:'#d4d0c8', foreColor:'#000000', visible:true, enabled:true };
+
+  state.controls = [
+    { id:1, type:'CommandButton', name:'Command1', caption:'Púlsame', text:'Púlsame',
+      left:140, top:80, width:140, height:40,
+      backColor:'#d4d0c8', foreColor:'#000000',
+      fontSize:12, visible:true, enabled:true, value:0, items:[] }
+  ];
+  state.nextId = 2;
+  state.counters = { CommandButton:1 };
+
+  // Código funcional listo para ejecutar
+  codeTa.value =
+`' Este es un ejemplo. Puedes borrarlo y escribir el tuyo.
+' Pulsa F5 para ejecutarlo.
+
+Private Sub Form_Load()
+    Me.Caption = "Mi primer programa"
+    Command1.Caption = "Púlsame"
+End Sub
+
+Private Sub Command1_Click()
+    MsgBox "¡Funciona!", vbInformation, "Saludo"
+End Sub
+`;
+  syncCode();
+  applyLanguage();
+  buildToolbox();
+  selectControl(1);
+  renderForm(); renderProps(); updateStatusText();
+}
+boot();
+</script>
+</body>
+</html>
